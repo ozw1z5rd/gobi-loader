@@ -276,7 +276,7 @@ int main(int argc, char **argv) {
     sleep(2);  
 
     qdlresplen = read (serialfd, qdlresp, 1024);
-    printf("QDL protocol server response received (Complete Apps)\n");  
+    printf("\nQDL protocol server response received (Complete Apps)\n");  
 
     printf("\nApps Sent.\n");
  
