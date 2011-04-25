@@ -6,11 +6,11 @@ Another gobi loader ( not for the 2k ) version which work for the HP EliteBook 6
 
 = Details =
 
-Unless you switch the notebook off and then on, the firmware is not unloaded from the device. If you are going to modify the loader it's a good idea to reset the device before each load.
+Unless you switch the notebook off and then switch it on, the firmware is not unloaded from the device. If you are going to modify the loader it's a good idea to reset the device before each load.
 
 This loader works with "ubuntu 2.6.32-30-generic" or major.
 
-Be sure the wifi support is on before to load the linux kernel. The wifi led must be "Blue", if it does not the kernel will not see the gobi loader.
+Be sure the wifi support is on before to load the linux kernel. The wifi led must be "Blue", if it does not the kernel will not see the gobi modem.
 
 If anything is ok the mesg output must show:
 {{{
@@ -38,7 +38,7 @@ qcserial
 If you change the /etc/modules, please reboot.
 
 = Get the firmware = 
-The Gobi firmare are in *C:/QUALCOMM/QDLService/Packages* folder in the windows partition, if you left it, otherwise get a windows machine  and download the driver from the HP site.
+The Gobi firmare are in *C:/QUALCOMM/QDLService/Packages* folder in the windows partition, if you left it, otherwise get a windows machine and download the driver from the HP site.
 
 As you can see there are plenty of firmware. 
 I'm using these:
