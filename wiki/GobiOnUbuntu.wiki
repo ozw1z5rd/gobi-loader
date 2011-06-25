@@ -1,0 +1,64 @@
+#ubuntu 11.04
+
+= Ubuntu 11.04 miss the support for my notebook =
+
+I installed ubuntu 11.04 and nothing is working. 
+The modem is not detected at all!
+
+As first step add the following two rows into the /etc/modules files:
+hp-wmi 
+qcserial 
+
+This is still not enough because the vendorID / deviceID used in my notebook are missing into the qcserial.ko driver.
+
+I mean these numbers:
+{{{
+ oz@ubuntu:/usr/src/linux-source-2.6.38/linux-source-2.6.38/drivers/usb/serial$ lsusb 
+ :
+ .
+ Bus 003 Device 002: ID *03f0:171d* Hewlett-Packard Wireless (Bluetooth + WLAN)  Interface [Integrated Module]  
+ :
+ .
+}}}
+
+Let's add them and recompile qcserial.c: 
+{{{
+ apt-get install linux-source-2.6.38 
+ cd /usr/src/linux-source-2.6.38 
+ bunzip2 linux-source-2.6.38.tar.bz2
+ tar xvf  linux-source-2.6.38.tar
+ cd  linux-source-2.6.38/drivers/usb/serial
+ vi qcserial.c 
+}}}
+Add this row :
+{{{
+       {USB_DEVICE(0x03f0, 0x171d)},   /* HP Gobi 2000 Modem device OZ  */ 
+
+}}}
+Open the MakeFile inside the same folder and add in top:
+{{{
+ obj-m = qcserial.o  
+ KVERSION = $(shell uname -r) 
+ all: 
+ <press tab>make -C /lib/modules/$(KVERSION)/build M=$(PWD) modules 
+ clean: 
+ <press tab>make -C /lib/modules/$(KVERSION)/build M=$(PWD) clean 
+}}}
+Now
+
+ make
+
+after the compilation completes copy qcserial.ko in 
+/lib/modules/2.6.38-8-generic/kernel/drivers/usb/serial/
+
+
+
+
+
+
+= Details =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
