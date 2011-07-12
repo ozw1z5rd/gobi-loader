@@ -53,15 +53,20 @@ Now
 after the compilation completes copy qcserial.ko in 
 /lib/modules/2.6.38-8-generic/kernel/drivers/usb/serial/
 
-After the reboot you will see the modem is detected and the ttyUSB0 and ttyUSB1 are made available:
+After the reboot you will see the modem is detected and the ttyUSB0, ttyUSB1 and ttyUSB2 are made available:
+
 {{{
-[   27.908170] usbserial: USB Serial Driver core
-[   27.912460] USB Serial support registered for Qualcomm USB modem
-[   27.914390] qcserial 3-1:1.2: Qualcomm USB modem converter detected
-[   27.914560] usb 3-1: Qualcomm USB modem converter now attached to ttyUSB0
-[   27.915407] qcserial 3-1:1.3: Qualcomm USB modem converter detected
-[   27.915550] usb 3-1: Qualcomm USB modem converter now attached to ttyUSB1
-[   27.915598] usbcore: registered new interface driver qcserial
+[   66.143267] qcserial 1-2:1.1: Qualcomm USB modem converter detected
+[   66.143355] usb 1-2: Qualcomm USB modem converter now attached to ttyUSB0
+[   66.144809] qcserial 1-2:1.2: Qualcomm USB modem converter detected
+[   66.144900] usb 1-2: Qualcomm USB modem converter now attached to ttyUSB1
+[   66.145698] qcserial 1-2:1.3: Qualcomm USB modem converter detected
+[   66.145767] usb 1-2: Qualcomm USB modem converter now attached to ttyUSB2
 }}}
 
-Of course loader won't work :-) but I'm working on this.
+Loader still works but you have to start it after a cold boot, also I noticed any attempt to start again the loader will crash the device, this also happens if you are using wvdial with the incorrect ttyUSBx port.
+
+The best this is to start the loader after the computer booted, then use the network manager to connet skipping the use of wvdial.
+
+I also noticed sometimes the devices hangs and reboot, so you have to start again the loader.
+
