@@ -148,3 +148,5 @@ Loader still works but you have to start it after a cold boot, also I noticed an
 The best this is to start the loader after the computer booted, then use the network manager to connet skipping the use of wvdial.
 
 I also noticed sometimes the devices hangs and reboot, so you have to start again the loader.
+
+Using this notebook with ubuntu and linux, I got another issue. Sometimes when working with windows, after the computer is rebooted the wlan card is switched off and so it stays also when this notebook is booting linux making the device discovery useless. I think this problem is related with the capabilities to switch off the card via software and ubuntu 11 is not able to switch on it. If you are experiencing some problems with the loader check the wifi status led, to get the whole procedure working it must be blue while linux is booting.
