@@ -1,0 +1,152 @@
+#ubuntu 11.04
+
+# Ubuntu 11.04 miss the support for my notebook #
+
+I installed ubuntu 11.04 and nothing is working.
+The modem is not detected at all!
+
+As first step add the following two rows into the /etc/modules files:
+```
+hp-wmi 
+qcserial 
+```
+This is still not enough because the vendorID / deviceID used in my notebook are missing into the qcserial.ko driver.
+
+I mean these numbers:
+```
+ oz@ubuntu:/usr/src/linux-source-2.6.38/linux-source-2.6.38/drivers/usb/serial$ lsusb 
+ :
+ .
+ Bus 003 Device 002: ID 03f0:171d Hewlett-Packard Wireless (Bluetooth + WLAN)  Interface [Integrated Module]  
+ -----------------------^^^^^^^^^
+ :
+ .
+```
+
+Let's add them and recompile qcserial.c:
+```
+ apt-get install linux-source-2.6.38 
+ cd /usr/src/linux-source-2.6.38 
+ bunzip2 linux-source-2.6.38.tar.bz2
+ tar xvf  linux-source-2.6.38.tar
+ cd  linux-source-2.6.38/drivers/usb/serial
+ vi qcserial.c 
+```
+Add this row :
+```
+       {USB_DEVICE(0x03f0, 0x171d)},   /* HP Gobi 2000 Modem device OZ  */ 
+
+```
+Open the MakeFile inside the same folder and add in top:
+```
+ obj-m = qcserial.o  
+ KVERSION = $(shell uname -r) 
+ all: 
+ <press tab>make -C /lib/modules/$(KVERSION)/build M=$(PWD) modules 
+ clean: 
+ <press tab>make -C /lib/modules/$(KVERSION)/build M=$(PWD) clean 
+```
+Now
+```
+ make
+```
+after the compilation completes copy qcserial.ko in
+/lib/modules/2.6.38-8-generic/kernel/drivers/usb/serial/
+
+After the reboot you will see the modem is detected and the ttyUSB0, ttyUSB1 and ttyUSB2 are made available:
+
+```
+root@ubuntu:/root# uname -a 
+Linux ubuntu 2.6.38-8-generic #42-Ubuntu SMP Mon Apr 11 03:31:24 UTC 2011 x86_64 x86_64 x86_64 GNU/Linux
+root@ubuntu:/root# sh loadfm.sh 
+loading firmware
+Starting Gobi firmware loader 
+QDL protocol server request sent (QDL download)
+QDL protocol server response received (QDL download)
+Device ok. Sending amss.mbn
+QDL protocol server request sent (Send AMSS)
+QDL protocol server response received (Send AMSS)
+QDL protocol server request sent (Complete AMSS)
+..........
+AMSS Sent.
+QDL protocol server response received (Send AMSS)
+Sending apss.mbn
+QDL protocol server request sent (Send Apps)
+QDL protocol server response received (Send Apps)
+QDL protocol server request sent (Complete Apps)
+....QDL protocol server response received (Complete Apps)
+
+Apps Sent.
+Finishing...
+QDL protocol server request sent (Complete QDL download)
+Waiting 2sec to allow the device startup...
+
+dmesg
+
+[   66.143267] qcserial 1-2:1.1: Qualcomm USB modem converter detected
+[   66.143355] usb 1-2: Qualcomm USB modem converter now attached to ttyUSB0
+[   66.144809] qcserial 1-2:1.2: Qualcomm USB modem converter detected
+[   66.144900] usb 1-2: Qualcomm USB modem converter now attached to ttyUSB1
+[   66.145698] qcserial 1-2:1.3: Qualcomm USB modem converter detected
+[   66.145767] usb 1-2: Qualcomm USB modem converter now attached to ttyUSB2
+
+Network manager handles it correctly.
+
+Jul 12 07:15:10 ubuntu modem-manager[860]: <info>  (ttyUSB0) opening serial port...
+Jul 12 07:15:10 ubuntu modem-manager[860]: <info>  (ttyUSB1) opening serial port...
+Jul 12 07:15:10 ubuntu modem-manager[860]: <info>  (ttyUSB2) opening serial port...
+Jul 12 07:15:22 ubuntu modem-manager[860]: <info>  (ttyUSB1) closing serial port...
+Jul 12 07:15:22 ubuntu modem-manager[860]: <info>  (ttyUSB1) serial port closed
+Jul 12 07:15:25 ubuntu modem-manager[860]: <info>  (ttyUSB1) opening serial port...
+Jul 12 07:15:25 ubuntu modem-manager[860]: <info>  (Gobi): GSM modem /sys/devices/pci0000:00/0000:00:1a.7/usb1/1-2 claimed port ttyUSB1
+Jul 12 07:15:46 ubuntu modem-manager[860]: <info>  (ttyUSB0) closing serial port...
+Jul 12 07:15:46 ubuntu modem-manager[860]: <info>  (ttyUSB0) serial port closed
+Jul 12 07:15:46 ubuntu modem-manager[860]: <info>  (ttyUSB2) closing serial port...
+Jul 12 07:15:46 ubuntu modem-manager[860]: <info>  (ttyUSB2) serial port closed
+Jul 12 07:15:46 ubuntu modem-manager[860]: <info>  (ttyUSB1) closing serial port...
+Jul 12 07:15:46 ubuntu modem-manager[860]: <info>  (ttyUSB1) serial port closed
+Jul 12 07:15:46 ubuntu NetworkManager[858]: <warn> (ttyUSB1): failed to look up interface index
+Jul 12 07:15:46 ubuntu NetworkManager[858]: <info> WWAN now disabled by management service
+Jul 12 07:15:46 ubuntu NetworkManager[858]: <info> (ttyUSB1): new GSM device (driver: 'qcserial' ifindex: -1)
+Jul 12 07:15:46 ubuntu NetworkManager[858]: <info> (ttyUSB1): exported as /org/freedesktop/NetworkManager/Devices/3
+Jul 12 07:15:46 ubuntu NetworkManager[858]: <info> (ttyUSB1): now managed
+Jul 12 07:15:46 ubuntu NetworkManager[858]: <info> (ttyUSB1): device state change: 1 -> 2 (reason 2)
+Jul 12 07:15:46 ubuntu NetworkManager[858]: <info> (ttyUSB1): deactivating device (reason: 2).
+Jul 12 07:15:46 ubuntu NetworkManager[858]: <info> (ttyUSB1): device state change: 2 -> 3 (reason 0)
+Jul 12 07:15:52 ubuntu NetworkManager[858]: <info> Activation (ttyUSB1) starting connection '3 Abbonamento'
+Jul 12 07:15:52 ubuntu NetworkManager[858]: <info> (ttyUSB1): device state change: 3 -> 4 (reason 0)
+Jul 12 07:15:52 ubuntu NetworkManager[858]: <info> Activation (ttyUSB1) Stage 1 of 5 (Device Prepare) scheduled...
+Jul 12 07:15:52 ubuntu NetworkManager[858]: <info> Activation (ttyUSB1) Stage 1 of 5 (Device Prepare) started...
+Jul 12 07:15:52 ubuntu NetworkManager[858]: <info> (ttyUSB1): device state change: 4 -> 6 (reason 0)
+Jul 12 07:15:52 ubuntu NetworkManager[858]: <info> Activation (ttyUSB1) Stage 1 of 5 (Device Prepare) complete.
+Jul 12 07:15:52 ubuntu NetworkManager[858]: <info> Activation (ttyUSB1) Stage 1 of 5 (Device Prepare) scheduled...
+Jul 12 07:15:52 ubuntu NetworkManager[858]: <info> Activation (ttyUSB1) Stage 1 of 5 (Device Prepare) started...
+Jul 12 07:15:52 ubuntu NetworkManager[858]: <info> (ttyUSB1): device state change: 6 -> 4 (reason 0)
+Jul 12 07:15:52 ubuntu NetworkManager[858]: <info> Activation (ttyUSB1) Stage 1 of 5 (Device Prepare) complete.
+Jul 12 07:15:52 ubuntu modem-manager[860]: <info>  (ttyUSB1) opening serial port...
+Jul 12 07:15:52 ubuntu modem-manager[860]: <info>  Modem /org/freedesktop/ModemManager/Modems/1: state changed (disabled -> enabling)
+Jul 12 07:15:53 ubuntu modem-manager[860]: <info>  Modem /org/freedesktop/ModemManager/Modems/1: state changed (enabling -> enabled)
+Jul 12 07:15:53 ubuntu NetworkManager[858]: <info> WWAN now enabled by management service
+Jul 12 07:15:53 ubuntu modem-manager[860]: <info>  Modem /org/freedesktop/ModemManager/Modems/1: state changed (enabled -> registered)
+Jul 12 07:15:53 ubuntu modem-manager[860]: <info>  Modem /org/freedesktop/ModemManager/Modems/1: state changed (registered -> connecting)
+Jul 12 07:15:53 ubuntu modem-manager[860]: <info>  Modem /org/freedesktop/ModemManager/Modems/1: state changed (connecting -> connected)
+Jul 12 07:15:53 ubuntu NetworkManager[858]: <info> Activation (ttyUSB1) Stage 2 of 5 (Device Configure) scheduled...
+Jul 12 07:15:53 ubuntu NetworkManager[858]: <info> Activation (ttyUSB1) Stage 2 of 5 (Device Configure) starting...
+Jul 12 07:15:53 ubuntu NetworkManager[858]: <info> (ttyUSB1): device state change: 4 -> 5 (reason 0)
+Jul 12 07:15:53 ubuntu NetworkManager[858]: <info> Activation (ttyUSB1) Stage 2 of 5 (Device Configure) successful.
+Jul 12 07:15:53 ubuntu NetworkManager[858]: <info> Activation (ttyUSB1) Stage 3 of 5 (IP Configure Start) scheduled.
+Jul 12 07:15:53 ubuntu NetworkManager[858]: <info> Activation (ttyUSB1) Stage 2 of 5 (Device Configure) complete.
+Jul 12 07:15:53 ubuntu NetworkManager[858]: <info> Activation (ttyUSB1) Stage 3 of 5 (IP Configure Start) started...
+Jul 12 07:15:53 ubuntu NetworkManager[858]: <info> (ttyUSB1): device state change: 5 -> 7 (reason 0)
+Jul 12 07:15:53 ubuntu NetworkManager[858]: <info> starting PPP connection
+Jul 12 07:15:53 ubuntu NetworkManager[858]: <info> pppd started with pid 2676
+
+```
+
+Loader still works but you have to start it after a cold boot, also I noticed any attempt to start again the loader will crash the device, this also happens if you are using wvdial with the incorrect ttyUSBx port.
+
+The best this is to start the loader after the computer booted, then use the network manager to connet skipping the use of wvdial.
+
+I also noticed sometimes the devices hangs and reboot, so you have to start again the loader.
+
+Using this notebook with ubuntu and linux, I got another issue. Sometimes when working with windows, after the computer is rebooted the wlan card is switched off and so it stays also when this notebook is booting linux making the device discovery useless. I think this problem is related with the capabilities to switch off the card via software and ubuntu 11 is not able to switch on it. If you are experiencing some problems with the loader check the wifi status led, to get the whole procedure working it must be blue while linux is booting.
